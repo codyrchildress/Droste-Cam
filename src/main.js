@@ -1,6 +1,7 @@
 import './style.css';
 import { Webcam } from './webcam.js';
 import { DrosteRenderer } from './droste-renderer.js';
+import { PixelSortRenderer } from './pixelsort-renderer.js';
 import { UI } from './ui.js';
 
 const canvas = document.getElementById('canvas');
@@ -10,12 +11,46 @@ const btnAnim = document.getElementById('btn-toggle-anim');
 const cameraSelect = document.getElementById('camera-select');
 
 const webcam = new Webcam();
-const renderer = new DrosteRenderer(canvas);
-const ui = new UI(renderer);
+
+const renderers = {
+  droste: new DrosteRenderer(canvas),
+  pixelsort: new PixelSortRenderer(canvas),
+};
+
+let activeMode = 'droste';
+let activeRenderer = renderers.droste;
+
+const ui = new UI(renderers);
 
 let camRunning = false;
 
-// Populate camera selector
+// --- Mode switching ---
+function setMode(mode) {
+  activeMode = mode;
+  activeRenderer = renderers[mode];
+
+  // Update tab styles
+  document.querySelectorAll('.mode-tab').forEach(tab => {
+    tab.classList.toggle('active', tab.dataset.mode === mode);
+  });
+
+  // Show/hide mode-specific control panels
+  document.querySelectorAll('.mode-controls').forEach(el => {
+    el.style.display = el.dataset.mode === mode ? '' : 'none';
+  });
+
+  // Show/hide mode-specific header buttons
+  document.querySelectorAll('[data-modes]').forEach(el => {
+    const modes = el.dataset.modes.split(',');
+    el.style.display = modes.includes(mode) ? '' : 'none';
+  });
+}
+
+document.querySelectorAll('.mode-tab').forEach(tab => {
+  tab.addEventListener('click', () => setMode(tab.dataset.mode));
+});
+
+// --- Camera ---
 async function populateCameras() {
   const devices = await webcam.getDevices();
   cameraSelect.innerHTML = '';
@@ -41,24 +76,26 @@ cameraSelect.addEventListener('change', async () => {
   }
 });
 
-// Resize canvas to fill viewport
+// --- Resize ---
 function onResize() {
-  renderer.resize();
+  // Resize all renderers so they're ready when switched to
+  renderers.droste.resize();
+  renderers.pixelsort.resize();
 }
 window.addEventListener('resize', onResize);
 onResize();
 
-// Animation loop
+// --- Animation loop ---
 function loop(timestamp) {
   if (webcam.ready) {
-    renderer.uploadTexture(webcam.element);
+    activeRenderer.uploadTexture(webcam.element);
   }
-  renderer.render(timestamp);
+  activeRenderer.render(timestamp);
   requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
 
-// Start webcam
+// --- Start/stop webcam ---
 async function startCam() {
   try {
     message.classList.add('hidden');
@@ -84,25 +121,25 @@ function stopCam() {
   message.querySelector('p').textContent = 'Click to start webcam';
 }
 
-// Button handlers
 btnCam.addEventListener('click', () => {
   if (camRunning) stopCam();
   else startCam();
 });
 
+// --- Animation toggle (Droste-specific) ---
 btnAnim.addEventListener('click', () => {
-  renderer.animating = !renderer.animating;
-  btnAnim.classList.toggle('active', !renderer.animating);
-  document.getElementById('anim-icon').innerHTML = renderer.animating
+  renderers.droste.animating = !renderers.droste.animating;
+  btnAnim.classList.toggle('active', !renderers.droste.animating);
+  document.getElementById('anim-icon').innerHTML = renderers.droste.animating
     ? '&#10074;&#10074;'
     : '&#9654;';
 });
 
-// Grid toggle
+// --- Grid toggle (Droste-specific) ---
 const btnGrid = document.getElementById('btn-toggle-grid');
 const toggleGrid = () => {
-  renderer.params.showGrid = renderer.params.showGrid ? 0 : 1;
-  btnGrid.classList.toggle('active', !!renderer.params.showGrid);
+  renderers.droste.params.showGrid = renderers.droste.params.showGrid ? 0 : 1;
+  btnGrid.classList.toggle('active', !!renderers.droste.params.showGrid);
 };
 btnGrid.addEventListener('click', toggleGrid);
 document.addEventListener('keydown', (e) => {
@@ -111,7 +148,7 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
-// Click message to start
+// --- Click message to start ---
 message.addEventListener('click', startCam);
 
 // Auto-start webcam

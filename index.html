@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Droste Cam</title>
+  <title>Webcam FX</title>
   <link rel="stylesheet" href="/src/style.css" />
 </head>
 <body>
@@ -11,15 +11,18 @@
 
   <div id="controls">
     <div class="controls-header">
-      <h1>Droste Cam</h1>
+      <div class="mode-tabs">
+        <button class="mode-tab active" data-mode="droste">Droste</button>
+        <button class="mode-tab" data-mode="pixelsort">Pixel Sort</button>
+      </div>
       <div class="controls-buttons">
         <button id="btn-toggle-cam" title="Start/Stop Camera">
           <span id="cam-icon">&#9673;</span>
         </button>
-        <button id="btn-toggle-anim" title="Pause/Resume Animation">
+        <button id="btn-toggle-anim" data-modes="droste" title="Pause/Resume Animation">
           <span id="anim-icon">&#10074;&#10074;</span>
         </button>
-        <button id="btn-toggle-grid" title="Toggle Grid (G)">
+        <button id="btn-toggle-grid" data-modes="droste" title="Toggle Grid (G)">
           <span id="grid-icon">&#9638;</span>
         </button>
       </div>
@@ -32,32 +35,63 @@
       </select>
     </div>
 
-    <div class="geometry-group">
-      <label>Geometry <span id="val-geometry">1, -1</span></label>
-      <div class="geometry-pad" id="geometry-pad">
-        <canvas id="geometry-canvas" width="200" height="200"></canvas>
-        <div class="geometry-point" id="geometry-point"></div>
+    <!-- Droste mode controls -->
+    <div class="mode-controls" data-mode="droste">
+      <div class="geometry-group">
+        <label>Geometry <span id="val-geometry">1, -1</span></label>
+        <div class="geometry-pad" id="geometry-pad">
+          <canvas id="geometry-canvas" width="200" height="200"></canvas>
+          <div class="geometry-point" id="geometry-point"></div>
+        </div>
+      </div>
+
+      <div class="slider-group">
+        <label>Zoom <span id="val-zoom">0.30</span></label>
+        <input type="range" id="zoomSpeed" min="0" max="2.0" step="0.01" value="0.30" />
+      </div>
+
+      <div class="spring-section">
+        <label class="section-label">Spring</label>
+        <div class="slider-group">
+          <label>Stiffness <span id="val-stiffness">120</span></label>
+          <input type="range" id="stiffness" min="1" max="500" step="1" value="120" />
+        </div>
+        <div class="slider-group">
+          <label>Damping <span id="val-damping">12</span></label>
+          <input type="range" id="damping" min="0" max="50" step="0.5" value="12" />
+        </div>
+        <div class="slider-group">
+          <label>Mass <span id="val-mass">1.0</span></label>
+          <input type="range" id="mass" min="0.1" max="10" step="0.1" value="1.0" />
+        </div>
       </div>
     </div>
 
-    <div class="slider-group">
-      <label>Zoom <span id="val-zoom">0.30</span></label>
-      <input type="range" id="zoomSpeed" min="0" max="2.0" step="0.01" value="0.30" />
-    </div>
+    <!-- Pixel Sort mode controls -->
+    <div class="mode-controls" data-mode="pixelsort" style="display: none;">
+      <div class="slider-group">
+        <label>Threshold <span id="val-threshold">0.50</span></label>
+        <input type="range" id="threshold" min="0" max="1" step="0.01" value="0.50" />
+      </div>
 
-    <div class="spring-section">
-      <label class="section-label">Spring</label>
-      <div class="slider-group">
-        <label>Stiffness <span id="val-stiffness">120</span></label>
-        <input type="range" id="stiffness" min="1" max="500" step="1" value="120" />
+      <div class="select-group no-border">
+        <label>Direction</label>
+        <select id="sort-direction">
+          <option value="0">Horizontal</option>
+          <option value="1" selected>Vertical</option>
+        </select>
       </div>
+
       <div class="slider-group">
-        <label>Damping <span id="val-damping">12</span></label>
-        <input type="range" id="damping" min="0" max="50" step="0.5" value="12" />
+        <label>Intensity <span id="val-intensity">32</span></label>
+        <input type="range" id="sort-intensity" min="0" max="100" step="1" value="30" />
       </div>
-      <div class="slider-group">
-        <label>Mass <span id="val-mass">1.0</span></label>
-        <input type="range" id="mass" min="0.1" max="10" step="0.1" value="1.0" />
+
+      <div class="checkbox-group">
+        <label>
+          <input type="checkbox" id="sort-reverse" />
+          <span>Reverse sort order</span>
+        </label>
       </div>
     </div>
   </div>

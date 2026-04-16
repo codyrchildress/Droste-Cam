@@ -1,6 +1,7 @@
 export class UI {
-  constructor(renderer) {
-    this.renderer = renderer;
+  constructor(renderers) {
+    this.drosteRenderer = renderers.droste;
+    this.pixelsortRenderer = renderers.pixelsort;
     this.controls = document.getElementById('controls');
     this.hideTimeout = null;
     this.pinned = false;
@@ -12,11 +13,11 @@ export class UI {
     // Spring physics state
     this.spring = {
       // Current position (what the shader sees)
-      x: renderer.params.geometryX,
-      y: renderer.params.geometryY,
+      x: this.drosteRenderer.params.geometryX,
+      y: this.drosteRenderer.params.geometryY,
       // Target position (where the user dragged to)
-      targetX: renderer.params.geometryX,
-      targetY: renderer.params.geometryY,
+      targetX: this.drosteRenderer.params.geometryX,
+      targetY: this.drosteRenderer.params.geometryY,
       // Velocity
       vx: 0,
       vy: 0,
@@ -30,6 +31,7 @@ export class UI {
     this._bindSpringSliders();
     this._initGeometryPad();
     this._startSpringLoop();
+    this._bindPixelSortControls();
     this._bindDrag();
     this._bindAutoHide();
     this._bindToggleUI();
@@ -40,7 +42,7 @@ export class UI {
     const display = document.getElementById('val-zoom');
 
     input.addEventListener('input', () => {
-      this.renderer.params.zoomSpeed = parseFloat(input.value);
+      this.drosteRenderer.params.zoomSpeed = parseFloat(input.value);
       display.textContent = parseFloat(input.value).toFixed(2);
     });
   }
@@ -152,8 +154,8 @@ export class UI {
       s.y += s.vy * dt;
 
       // Update renderer params
-      this.renderer.params.geometryX = s.x;
-      this.renderer.params.geometryY = s.y;
+      this.drosteRenderer.params.geometryX = s.x;
+      this.drosteRenderer.params.geometryY = s.y;
 
       // Update visual point position
       this._updatePointVisual();
@@ -201,6 +203,37 @@ export class UI {
     ctx.moveTo(0, h / 2);
     ctx.lineTo(w, h / 2);
     ctx.stroke();
+  }
+
+  _bindPixelSortControls() {
+    const params = this.pixelsortRenderer.params;
+
+    const thresholdInput = document.getElementById('threshold');
+    const thresholdDisplay = document.getElementById('val-threshold');
+    thresholdInput.addEventListener('input', () => {
+      params.threshold = parseFloat(thresholdInput.value);
+      thresholdDisplay.textContent = parseFloat(thresholdInput.value).toFixed(2);
+    });
+
+    const dirSelect = document.getElementById('sort-direction');
+    dirSelect.addEventListener('change', () => {
+      params.direction = parseFloat(dirSelect.value);
+    });
+
+    const intensityInput = document.getElementById('sort-intensity');
+    const intensityDisplay = document.getElementById('val-intensity');
+    const intensityFromSlider = (v) => Math.max(1, Math.round(Math.pow(v / 100, 3) * 2048));
+    params.intensity = intensityFromSlider(parseFloat(intensityInput.value));
+    intensityDisplay.textContent = params.intensity;
+    intensityInput.addEventListener('input', () => {
+      params.intensity = intensityFromSlider(parseFloat(intensityInput.value));
+      intensityDisplay.textContent = params.intensity;
+    });
+
+    const reverseInput = document.getElementById('sort-reverse');
+    reverseInput.addEventListener('change', () => {
+      params.reverse = reverseInput.checked ? 1 : 0;
+    });
   }
 
   _bindDrag() {

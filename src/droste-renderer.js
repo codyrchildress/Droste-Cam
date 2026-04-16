@@ -41,13 +41,13 @@ export class DrosteRenderer {
     gl.useProgram(this.program);
 
     const verts = new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]);
-    const buf = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    this.buffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
     gl.bufferData(gl.ARRAY_BUFFER, verts, gl.STATIC_DRAW);
 
-    const aPos = gl.getAttribLocation(this.program, 'aPosition');
-    gl.enableVertexAttribArray(aPos);
-    gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+    this.aPosition = gl.getAttribLocation(this.program, 'aPosition');
+    gl.enableVertexAttribArray(this.aPosition);
+    gl.vertexAttribPointer(this.aPosition, 2, gl.FLOAT, false, 0, 0);
 
     this.uniforms = {
       uTexture: gl.getUniformLocation(this.program, 'uTexture'),
@@ -106,6 +106,15 @@ export class DrosteRenderer {
     }
 
     const gl = this.gl;
+
+    // Re-bind own state (shared GL context with other renderers)
+    gl.useProgram(this.program);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
+    gl.enableVertexAttribArray(this.aPosition);
+    gl.vertexAttribPointer(this.aPosition, 2, gl.FLOAT, false, 0, 0);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, this.texture);
+
     gl.clear(gl.COLOR_BUFFER_BIT);
 
     gl.uniform1i(this.uniforms.uTexture, 0);
