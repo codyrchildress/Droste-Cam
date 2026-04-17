@@ -33,13 +33,6 @@ varying vec2 vUv;
 #define PI 3.14159265359
 #define TWO_PI 6.28318530718
 
-// Mirror-wrap a UV into [0,1] so the webcam tiles without a visible
-// rectangular seam at the borders.
-vec2 mirrorWrap(vec2 uv) {
-  uv = fract(uv * 0.5) * 2.0;
-  return 1.0 - abs(uv - 1.0);
-}
-
 // Compensate for non-square webcam aspect inside the unit UV square.
 vec2 fitAspect(vec2 uv) {
   if (uTexAspect > 1.0) {
@@ -82,12 +75,16 @@ void main() {
   // Animate along the zoom direction.
   lnr_in += uTime * uZoomSpeed * sign(logScale);
 
-  // Map log-polar coordinate into the webcam rectangle. The strip
-  // period*2*pi covers the webcam linearly; mirror-wrap hides the
-  // webcam's rectangular edges where they meet the next tile.
-  vec2 stripUv = vec2(lnr_in / period, theta_in / TWO_PI + 0.5);
-  vec2 texUv = mirrorWrap(stripUv);
-  texUv = fitAspect(texUv);
+  // Map log-polar coordinate into the webcam rectangle. One fundamental
+  // strip (period in lnr, 2*pi in theta) covers the webcam linearly.
+  // Plain fract() is essential here: across the atan2 branch cut the
+  // shear produces a jump of exactly (period, 2*pi), which equals one
+  // full lattice cell and is absorbed by fract(). Mirror-wrap would
+  // instead treat the jump as a reflection and produce a horizontal
+  // seam across the image.
+  vec2 stripUv = vec2(fract(lnr_in / period),
+                      fract(theta_in / TWO_PI + 0.5));
+  vec2 texUv = fitAspect(stripUv);
 
   vec4 color = texture2D(uTexture, texUv);
 
