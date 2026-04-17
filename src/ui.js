@@ -6,8 +6,8 @@ export class UI {
     this.hideTimeout = null;
     this.pinned = false;
 
-    // Geometry pad range: -4 to 4 on both axes
-    this.geoRange = 4;
+    // Geometry pad range: -3 to 3. X = log(scale), Y = twist turns per zoom.
+    this.geoRange = 3;
     this.manuallyHidden = false;
 
     // Spring physics state
