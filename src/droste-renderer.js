@@ -11,9 +11,12 @@ export class DrosteRenderer {
     });
     if (!this.gl) throw new Error('WebGL not supported');
 
+    // geometryX = log(scale): zoom ratio per Droste level (e^1.5 ~ 4.5x)
+    // geometryY = twist: full rotations per zoom level
+    //   0 = straight Droste (circular cut), 1 = classic Escher spiral
     this.params = {
-      geometryX: 1.0,
-      geometryY: -1.0,
+      geometryX: 1.5,
+      geometryY: 1.0,
       zoomSpeed: 0.3,
       showGrid: 0,
     };
